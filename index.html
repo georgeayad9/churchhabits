@@ -168,6 +168,16 @@ function renderFollow(){
     else h += `<div class="banner ok">لا توجد تنبيهات تأخير حاليًا.</div>`;
   }
   h += `<section>
+    <h2>إزاي بنحسب التواريخ والتنبيهات؟</h2>
+    <ul class="muted" style="padding-inline-start:18px;line-height:1.9;margin:0">
+      <li><b>آخر تناول</b> = أحدث تاريخ اتسجل فيه "تم" في خانة التناول لأي أسبوع.</li>
+      <li><b>آخر اعتراف</b> = أحدث تاريخ اتسجل فيه "تم" في خانة الاعتراف لأي أسبوع.</li>
+      <li>التاريخ هو اللي مكتوب في خانة التاريخ بعد "تم" (افتراضيًا اليوم المختار في شاشة التسجيل)، ويقدر تعدله.</li>
+      <li>تنبيه التناول بيظهر لو آخر تناول أقدم من شهر من النهارده، وتنبيه الاعتراف لو أقدم من شهرين. ولو مفيش "تم" خالص، بيعتبر متأخر.</li>
+      <li>"منذ X يوم" بتتحسب من النهارده لحد التاريخ ده.</li>
+    </ul>
+  </section>
+  <section>
     <h2>الأسماء ومتابعتها</h2>
     ${info.map(i => {
       const commLine = i.lc
@@ -244,20 +254,27 @@ async function doExport(kind){
   if (kind === 'records') { name = 'records-tanawol.csv'; text = recordsCSV(); ext = '.csv'; }
   else if (kind === 'summary') { name = 'summary-tanawol.csv'; text = summaryCSV(); ext = '.csv'; }
   else { name = 'backup-tanawol.json'; text = JSON.stringify({ version: 1, exported: todayKey(), people: state.people }, null, 2); ext = '.json'; }
-  let saved = false;
-  try {
-    const c = window.claude;
-    const dl = c ? await c.use('downloads') : null;
-    if (dl) { await dl.save({ filename: name, data: text }); saved = true; }
-  } catch (e) { saved = false; }
-  if (saved) {
-    flash = { msg: 'تم حفظ الملف ' + name, cls: 'ok' };
-    out = null;
-  } else {
-    // المتصفح ممكن يرفض التحميل المباشر، فبنعرض النص عشان تنسخه وتحفظه بنفسك
-    out = { text, msg: 'لو التحميل المباشر ما اشتغلش، انسخ النص ده واحفظه في ملف اسمه ' + name + ' (بالامتداد ' + ext + ').' };
-    if (!c || !dl) { try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {} }
+  // أولًا: لو المنصة بتدعم الحفظ المباشر
+  let saved = false, dl = null;
+  try { const c = window.claude; dl = c ? await c.use('downloads') : null; } catch (e) { dl = null; }
+  if (dl) { try { await dl.save({ filename: name, data: text }); saved = true; } catch (e) { saved = false; } }
+  // ثانيًا: تحميل عادي من المتصفح (لصفحات GitHub Pages وغيرها)
+  if (!saved) {
+    try {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      saved = true;
+    } catch (e) { saved = false; }
   }
+  flash = saved
+    ? { msg: 'اتعمل تحميل للملف ' + name + '. لو ما نزلش، انسخ النص اللي تحت واحفظه بالامتداد ' + ext + '.', cls: 'ok' }
+    : { msg: 'التحميل المباشر اتمنع. انسخ النص اللي تحت واحفظه في ملف اسمه ' + name + '.', cls: 'warn' };
+  // دايمًا نعرض النص كاحتياطي
+  out = { text, msg: 'النص الكامل للملف ' + name + ' (تقدر تنسخه وتحفظه بالامتداد ' + ext + ').' };
   render();
 }
 async function copyOut(){
