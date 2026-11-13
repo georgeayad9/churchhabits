@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>متابعة التناول والاعتراف</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f3ee;--card:#fff;--ink:#1f2933;--muted:#6b7280;--line:#e5e1d8;--ok:#15803d;--okbg:#dcfce7;--no:#b45309;--nobg:#fef3c7;--alert:#b91c1c;--alertbg:#fee2e2;--accent:#1e40af}
+*{box-sizing:border-box}
+body{margin:0;font-family:Cairo,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
+header{background:var(--accent);color:#fff;padding:18px 16px 0}
+header h1{margin:0;font-size:20px}
+header p{margin:4px 0 10px;opacity:.85;font-size:13px}
+nav{display:flex;gap:4px}
+nav a{color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px 10px 0 0;opacity:.75;font-weight:600}
+nav a.active{background:var(--bg);color:var(--accent);opacity:1}
+main{max-width:860px;margin:0 auto;padding:16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+h2{font-size:17px;margin:0 0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=text],input[type=date],input[type=file]{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:0;max-width:100%}
+input[type=text]{flex:1;min-width:180px}
+textarea{font:inherit;width:100%;min-height:120px;padding:10px;border:1px solid var(--line);border-radius:10px;direction:ltr;text-align:left;font-size:12px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#fff;padding:8px 14px;color:var(--ink)}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.danger{color:var(--alert);border-color:#fca5a5}
+button.on-done{background:var(--ok);color:#fff;border-color:var(--ok)}
+button.on-no{background:var(--no);color:#fff;border-color:var(--no)}
+.banner{border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.8}
+.banner.warn{background:var(--nobg);border:1px solid #fcd34d}
+.banner.alert{background:var(--alertbg);border:1px solid #fca5a5;color:var(--alert)}
+.banner.ok{background:var(--okbg);border:1px solid #86efac}
+.person{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
+.person h3{margin:0;font-size:17px}
+.line{font-size:14px;margin:6px 0;line-height:1.8}
+.tag{display:inline-block;background:var(--alertbg);color:var(--alert);border-radius:8px;padding:2px 8px;font-size:12px;margin-inline-start:6px}
+.weekrow{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px}
+.label{font-weight:700;margin-bottom:6px}
+.muted{color:var(--muted);font-size:13px}
+.kind{min-width:64px;font-size:14px}
+.sub{margin-top:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>متابعة التناول والاعتراف</h1>
+  <p>سجّل أسبوعيًا، وتابع التنبيهات من شاشة المتابعة.</p>
+  <nav>
+    <a href="#record" id="nav-record">تسجيل الأسبوع</a>
+    <a href="#follow" id="nav-follow">المتابعة</a>
+  </nav>
+</header>
+<main>
+  <div id="app"></div>
+</main>
+<script>
+const KEY = 'tanawol-etiraf-v1';
+let state;
+try { state = JSON.parse(localStorage.getItem(KEY)) || { people: [] }; } catch (e) { state = { people: [] }; }
+if (!Array.isArray(state.people)) state.people = [];
+const view = { day: '' };
+let armed = null;
+let flash = null;   // {msg, cls}
+let out = null;     // {text, msg} fallback when direct download is refused
+
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+function newId(){ return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function pad(n){ return String(n).padStart(2, '0'); }
+function toKey(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function fromKey(k){ const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); }
+function todayKey(){ return toKey(new Date()); }
+function weekStart(k){ // الأسبوع يبدأ يوم السبت
+  const d = fromKey(k);
+  d.setDate(d.getDate() - ((d.getDay() - 6 + 7) % 7));
+  return toKey(d);
+}
+function fmt(k){ return fromKey(k).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }); }
+function daysAgo(k){ return Math.round((fromKey(todayKey()) - fromKey(k)) / 86400000); }
+function monthsBefore(n){
+  const t = new Date();
+  const d = new Date(t.getFullYear(), t.getMonth() - n, 1);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(t.getDate(), last));
+  return toKey(d);
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function validKey(k){ return /^\d{4}-\d{2}-\d{2}$/.test(k) && !isNaN(fromKey(k)); }
+function parseDate(s){
+  s = (s || '').trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) { const k = m[1] + '-' + pad(+m[2]) + '-' + pad(+m[3]); return validKey(k) ? k : ''; }
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // dd/mm/yyyy
+  if (m) { const k = m[3] + '-' + pad(+m[2]) + '-' + pad(+m[1]); return validKey(k) ? k : ''; }
+  return '';
+}
+function lab(s){ return s === 'done' ? 'تم' : s === 'no' ? 'لم يتم' : ''; }
+
+function lastDate(p, type){
+  let best = null;
+  for (const wk in p.records) {
+    const r = p.records[wk][type];
+    if (r && r.s === 'done' && r.d && (!best || r.d > best)) best = r.d;
+  }
+  return best;
+}
+function setRec(p, wk, type, status, date){
+  p.records[wk] = p.records[wk] || {};
+  if (status === null) delete p.records[wk][type];
+  else p.records[wk][type] = { s: status, d: status === 'done' ? date : null };
+}
+function computeInfo(){
+  const cutComm = monthsBefore(1), cutConf = monthsBefore(2);
+  return state.people.map(p => {
+    const lc = lastDate(p, 'comm'), lf = lastDate(p, 'conf');
+    return { p, lc, lf, ac: !lc || lc < cutComm, af: !lf || lf < cutConf };
+  });
+}
+
+/* ---------- شاشة التسجيل ---------- */
+function statusBtns(p, wk, type){
+  const r = (p.records[wk] || {})[type];
+  const s = r ? r.s : null;
+  let h = `<button class="${s === 'done' ? 'on-done' : ''}" data-act="set" data-id="${p.id}" data-wk="${wk}" data-type="${type}" data-s="done">تم</button>`
+        + `<button class="${s === 'no' ? 'on-no' : ''}" data-act="set" data-id="${p.id}" data-wk="${wk}" data-type="${type}" data-s="no">لم يتم</button>`;
+  if (s === 'done') h += `<input type="date" value="${r.d || view.day}" data-date data-id="${p.id}" data-wk="${wk}" data-type="${type}">`;
+  return h;
+}
+function renderRecord(){
+  const cur = weekStart(todayKey()), wk = weekStart(view.day);
+  const missing = state.people.filter(p => { const r = p.records[cur] || {}; return !r.comm || !r.conf; }).map(p => p.name);
+  let h = `<section>
+    <h2>إضافة اسم</h2>
+    <div class="row"><input type="text" id="newName" placeholder="اكتب الاسم"><button class="primary" data-act="add">إضافة</button></div>
+  </section>`;
+  h += `<section>
+    <h2>تسجيل الأسبوع</h2>
+    <div class="row">
+      <span>اختار أي يوم في الأسبوع:</span>
+      <input type="date" id="dayPick" value="${view.day}">
+      <span class="muted">الأسبوع من السبت ${fmt(wk)}</span>
+    </div>
+    ${missing.length ? `<div class="banner warn" style="margin-top:12px"><b>تنبيه الأسبوع:</b> لم تُسجَّل بعد خانات التناول أو الاعتراف لأسبوع الحالي (يبدأ ${fmt(cur)}) لـ: ${missing.map(esc).join('، ')}</div>` : ''}
+    <p class="muted">اختار "تم" أو "لم يتم". عند "تم" يظهر تاريخ تقدر تعدله (افتراضيًا اليوم المختار).</p>
+    ${state.people.map(p => `
+      <div class="weekrow">
+        <div class="label">${esc(p.name)}</div>
+        <div class="row"><span class="kind">التناول</span>${statusBtns(p, wk, 'comm')}</div>
+        <div class="row" style="margin-top:6px"><span class="kind">الاعتراف</span>${statusBtns(p, wk, 'conf')}</div>
+      </div>`).join('') || '<p class="muted">أضف أسماء أولًا.</p>'}
+  </section>`;
+  return h;
+}
+
+/* ---------- شاشة المتابعة ---------- */
+function renderFollow(){
+  const info = computeInfo();
+  let h = '';
+  if (flash) { h += `<div class="banner ${flash.cls}">${esc(flash.msg)}</div>`; flash = null; }
+  if (info.length) {
+    const alertLines = info.filter(i => i.ac || i.af).map(i => {
+      const parts = [];
+      if (i.ac) parts.push('التناول فات عليه أكتر من شهر');
+      if (i.af) parts.push('الاعتراف فات عليه أكتر من شهرين');
+      return `<div>${esc(i.p.name)}: ${parts.join(' — ')}</div>`;
+    }).join('');
+    if (alertLines) h += `<div class="banner alert"><b>تنبيهات التأخير:</b>${alertLines}</div>`;
+    else h += `<div class="banner ok">لا توجد تنبيهات تأخير حاليًا.</div>`;
+  }
+  h += `<section>
+    <h2>الأسماء ومتابعتها</h2>
+    ${info.map(i => {
+      const commLine = i.lc
+        ? `آخر تناول كان يوم <b>${fmt(i.lc)}</b> <span class="muted">(منذ ${daysAgo(i.lc)} يوم)</span>`
+        : `<span class="muted">لم يُسجَّل تناول بعد</span>`;
+      const confLine = i.lf
+        ? `آخر اعتراف كان يوم <b>${fmt(i.lf)}</b> <span class="muted">(منذ ${daysAgo(i.lf)} يوم)</span>`
+        : `<span class="muted">لم يُسجَّل اعتراف بعد</span>`;
+      return `<div class="person">
+        <div class="row">
+          <h3>${esc(i.p.name)}</h3>
+          <button class="danger" style="margin-inline-start:auto" data-act="del" data-id="${i.p.id}">${armed === i.p.id ? 'اضغط للتأكيد' : 'حذف'}</button>
+        </div>
+        <div class="line">${commLine}${i.ac ? '<span class="tag">التناول فات عليه أكتر من شهر</span>' : ''}</div>
+        <div class="line">${confLine}${i.af ? '<span class="tag">الاعتراف فات عليه أكتر من شهرين</span>' : ''}</div>
+      </div>`;
+    }).join('') || '<p class="muted">لم تضف أي اسم بعد.</p>'}
+  </section>`;
+
+  h += `<section>
+    <h2>التصدير والاستيراد</h2>
+    <div class="row">
+      <button class="primary" data-act="exp" data-kind="records">تصدير التسجيلات (Excel)</button>
+      <button data-act="exp" data-kind="summary">تصدير الملخص (Excel)</button>
+      <button data-act="exp" data-kind="json">نسخة احتياطية (JSON)</button>
+    </div>
+    <p class="muted">ملفات Excel بتتصدر بصيغة CSV وبترميز UTF-8 عشان العربي يظهر صح. افتحها في Excel أو احفظها كـ CSV بعدين.</p>
+    <div class="sub">
+      <div class="row">
+        <label class="muted">استيراد من ملف JSON أو CSV (نفس تنسيق التصدير):</label>
+        <input type="file" id="importFile" accept=".json,.csv,text/csv,application/json">
+      </div>
+      <p class="muted">الاستيراد بيضيف الأسماء الجديدة ويدمج التسجيلات مع الموجود (التسجيل المستورد بيحل محل نفس الأسبوع).</p>
+    </div>
+    ${out ? `<div class="sub"><div class="muted">${esc(out.msg)}</div><textarea readonly id="outBox">${esc(out.text)}</textarea><div class="row" style="margin-top:6px"><button data-act="copy">نسخ النص</button></div></div>` : ''}
+  </section>`;
+  return h;
+}
+
+function render(){
+  if (!view.day) view.day = todayKey();
+  const screen = location.hash === '#follow' ? 'follow' : 'record';
+  document.getElementById('nav-record').classList.toggle('active', screen === 'record');
+  document.getElementById('nav-follow').classList.toggle('active', screen === 'follow');
+  document.getElementById('app').innerHTML = screen === 'follow' ? renderFollow() : renderRecord();
+}
+
+/* ---------- تصدير ---------- */
+function toCSV(rows){
+  return '﻿' + rows.map(r => r.map(v => {
+    const s = v == null ? '' : String(v);
+    return /[",\n\r;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\r\n');
+}
+function recordsCSV(){
+  const rows = [['الاسم', 'بداية الأسبوع (السبت)', 'التناول', 'تاريخ التناول', 'الاعتراف', 'تاريخ الاعتراف']];
+  state.people.forEach(p => {
+    Object.keys(p.records).sort().forEach(wk => {
+      const r = p.records[wk];
+      if (!r.comm && !r.conf) return;
+      const a = r.comm || {}, b = r.conf || {};
+      rows.push([p.name, wk, lab(a.s), a.s === 'done' ? a.d : '', lab(b.s), b.s === 'done' ? b.d : '']);
+    });
+  });
+  return toCSV(rows);
+}
+function summaryCSV(){
+  const rows = [['الاسم', 'آخر تناول', 'آخر اعتراف', 'التناول متأخر (أكتر من شهر)', 'الاعتراف متأخر (أكتر من شهرين)']];
+  computeInfo().forEach(i => rows.push([i.p.name, i.lc || '', i.lf || '', i.ac ? 'نعم' : 'لا', i.af ? 'نعم' : 'لا']));
+  return toCSV(rows);
+}
+async function doExport(kind){
+  let name, text, ext;
+  if (kind === 'records') { name = 'records-tanawol.csv'; text = recordsCSV(); ext = '.csv'; }
+  else if (kind === 'summary') { name = 'summary-tanawol.csv'; text = summaryCSV(); ext = '.csv'; }
+  else { name = 'backup-tanawol.json'; text = JSON.stringify({ version: 1, exported: todayKey(), people: state.people }, null, 2); ext = '.json'; }
+  let saved = false;
+  try {
+    const c = window.claude;
+    const dl = c ? await c.use('downloads') : null;
+    if (dl) { await dl.save({ filename: name, data: text }); saved = true; }
+  } catch (e) { saved = false; }
+  if (saved) {
+    flash = { msg: 'تم حفظ الملف ' + name, cls: 'ok' };
+    out = null;
+  } else {
+    // المتصفح ممكن يرفض التحميل المباشر، فبنعرض النص عشان تنسخه وتحفظه بنفسك
+    out = { text, msg: 'لو التحميل المباشر ما اشتغلش، انسخ النص ده واحفظه في ملف اسمه ' + name + ' (بالامتداد ' + ext + ').' };
+    if (!c || !dl) { try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {} }
+  }
+  render();
+}
+async function copyOut(){
+  const box = document.getElementById('outBox');
+  try { await navigator.clipboard.writeText(out.text); flash = { msg: 'تم النسخ', cls: 'ok' }; out = null; render(); }
+  catch (e) { if (box) { box.focus(); box.select(); } }
+}
+
+/* ---------- استيراد ---------- */
+function parseCSV(text){
+  text = text.replace(/^﻿/, '');
+  const first = text.split(/\r?\n/)[0] || '';
+  const delim = first.split(';').length > first.split(',').length ? ';' : ',';
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === delim) { row.push(cur); cur = ''; }
+    else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+    else if (ch !== '\r') cur += ch;
+  }
+  if (cur.length || row.length) { row.push(cur); rows.push(row); }
+  return rows;
+}
+function findOrCreate(name){
+  let p = state.people.find(x => x.name === name);
+  if (!p) { p = { id: newId(), name, records: {} }; state.people.push(p); }
+  return p;
+}
+function importCSV(text){
+  let n = 0;
+  parseCSV(text).forEach(r => {
+    const name = (r[0] || '').trim();
+    if (!name || name === 'الاسم') return;
+    const weekDate = parseDate(r[1]);
+    if (!weekDate) return;
+    const wk = weekStart(weekDate);
+    const p = findOrCreate(name);
+    const apply = (label, date, type) => {
+      const l = (label || '').trim();
+      if (l === 'تم') setRec(p, wk, type, 'done', parseDate(date) || weekDate);
+      else if (l === 'لم يتم') setRec(p, wk, type, 'no', null);
+    };
+    apply(r[2], r[3], 'comm');
+    apply(r[4], r[5], 'conf');
+    n++;
+  });
+  return n;
+}
+function importJSON(text){
+  const data = JSON.parse(text);
+  const list = Array.isArray(data) ? data : data.people;
+  if (!Array.isArray(list)) throw new Error('bad');
+  let n = 0;
+  list.forEach(ip => {
+    if (!ip || typeof ip.name !== 'string' || !ip.name.trim()) return;
+    const p = findOrCreate(ip.name.trim());
+    const recs = ip.records || {};
+    Object.keys(recs).forEach(wk => {
+      if (!validKey(wk)) return;
+      const w = weekStart(wk);
+      p.records[w] = Object.assign({}, p.records[w] || {}, recs[wk]);
+    });
+    n++;
+  });
+  return n;
+}
+function doImport(text, fname){
+  try {
+    const t = text.trim();
+    const isJSON = /\.json$/i.test(fname) || t.charAt(0) === '{' || t.charAt(0) === '[';
+    const n = isJSON ? importJSON(text) : importCSV(text);
+    save();
+    flash = { msg: 'تم الاستيراد: ' + n + ' سطر/اسم', cls: 'ok' };
+  } catch (e) {
+    flash = { msg: 'الملف مش مفهوم. اتأكد إنه ملف النسخة الاحتياطية (JSON) أو ملف CSV بنفس تنسيق التصدير.', cls: 'warn' };
+  }
+  render();
+}
+
+/* ---------- الأحداث ---------- */
+function addPerson(){
+  const inp = document.getElementById('newName');
+  if (!inp) return;
+  const n = inp.value.trim();
+  if (!n) return;
+  state.people.push({ id: newId(), name: n, records: {} });
+  save(); render();
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('button');
+  if (!t) return;
+  const act = t.dataset.act;
+  if (act === 'add') { addPerson(); return; }
+  if (act === 'exp') { doExport(t.dataset.kind); return; }
+  if (act === 'copy') { copyOut(); return; }
+  const p = state.people.find(x => x.id === t.dataset.id);
+  if (act === 'set' && p) {
+    const wk = t.dataset.wk, type = t.dataset.type, s = t.dataset.s;
+    const cur = p.records[wk] && p.records[wk][type];
+    setRec(p, wk, type, cur && cur.s === s ? null : s, view.day);
+    save(); render();
+  } else if (act === 'del' && p) {
+    if (armed === p.id) {
+      state.people = state.people.filter(x => x.id !== p.id);
+      armed = null; save();
+    } else armed = p.id;
+    render();
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.id === 'dayPick') { if (el.value) { view.day = el.value; render(); } return; }
+  if (el.hasAttribute('data-date') && el.value) {
+    const p = state.people.find(x => x.id === el.dataset.id);
+    const r = p && p.records[el.dataset.wk] && p.records[el.dataset.wk][el.dataset.type];
+    if (r && r.s === 'done') { r.d = el.value; save(); render(); }
+    return;
+  }
+  if (el.id === 'importFile' && el.files && el.files[0]) {
+    const f = el.files[0];
+    const reader = new FileReader();
+    reader.onload = () => doImport(String(reader.result || ''), f.name);
+    reader.readAsText(f, 'UTF-8');
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target && e.target.id === 'newName') addPerson();
+});
+window.addEventListener('hashchange', render);
+
+render();
+</script>
+</body>
+</html>
