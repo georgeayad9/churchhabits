@@ -1,228 +1,445 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>متابعة التناول والاعتراف</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>النوتة الروحية</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap">
 <style>
-:root{--bg:#f5f3ee;--card:#fff;--ink:#1f2933;--muted:#6b7280;--line:#e5e1d8;--ok:#15803d;--okbg:#dcfce7;--no:#b45309;--nobg:#fef3c7;--alert:#b91c1c;--alertbg:#fee2e2;--accent:#1e40af}
+:root{
+  --bg:#F4F6FA; --surface:#FFFFFF; --ink:#0F172A; --muted:#64748B; --line:#E2E8F0; --soft:#F8FAFC;
+  --accent:#2563EB; --on-accent:#FFFFFF; --accent-soft:#E0E7FF;
+  --done:#15803D; --done-bg:#DCFCE7;
+  --miss:#DC2626; --miss-bg:#FEE2E2;
+  --na:#0284C7; --na-bg:#E0F2FE;
+  --none:#94A3B8; --none-bg:#F1F5F9;
+  --warn:#B45309; --warn-bg:#FEF3C7;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 14px rgba(15,23,42,.05);
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#0B1120; --surface:#111A2E; --ink:#E2E8F0; --muted:#94A3B8; --line:#1E2A44; --soft:#0F1829;
+  --accent:#60A5FA; --on-accent:#0B1120; --accent-soft:#1E293B;
+  --done:#4ADE80; --done-bg:#123524;
+  --miss:#F87171; --miss-bg:#3B1A1F;
+  --na:#38BDF8; --na-bg:#0E2A3D;
+  --none:#64748B; --none-bg:#172033;
+  --warn:#FBBF24; --warn-bg:#3A2A0B;
+  --shadow:none;
+  color-scheme:dark;
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:Cairo,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
-header{background:var(--accent);color:#fff;padding:18px 16px 0}
-header h1{margin:0;font-size:20px}
-header p{margin:4px 0 10px;opacity:.85;font-size:13px}
-nav{display:flex;gap:4px}
-nav a{color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px 10px 0 0;opacity:.75;font-weight:600}
-nav a.active{background:var(--bg);color:var(--accent);opacity:1}
-main{max-width:860px;margin:0 auto;padding:16px}
-section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
-h2{font-size:17px;margin:0 0 12px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Tajawal',system-ui,'Segoe UI',Tahoma,sans-serif;font-size:17px;line-height:1.6;direction:rtl;transition:background .2s,color .2s}
+button,input,select,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:760px;margin:0 auto;padding:14px 14px 56px}
+.muted{color:var(--muted);font-size:14px}
+
+/* header */
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.brand{font-size:22px;font-weight:700;margin:0}
+.iconbtn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:18px}
+
+/* week */
+.topcard{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+.topcard .wt{flex:1;display:grid;justify-items:center;gap:2px;text-align:center}
+.topcard .wt strong{font-size:22px;font-weight:700}
+.topcard .wt span{font-size:14px;color:var(--muted)}
+.topcard input[type=date]{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:10px;background:var(--soft);margin-top:4px}
+.nav{min-width:88px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--soft);font-weight:500}
+
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;margin:12px 0}
+.seg{flex:1;text-align:center;text-decoration:none;padding:9px 6px;border-radius:10px;color:var(--muted);font-weight:500}
+.seg.on{background:var(--accent);color:var(--on-accent);font-weight:700}
+
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar input[type=text]{flex:1;min-width:180px;font:inherit;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.count{font-size:15px;color:var(--muted)}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-inline-start:4px solid var(--done);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card.missing{border-inline-start-color:var(--miss)}
+.chead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chead h3{margin:0;font-size:20px;font-weight:700;flex:1;min-width:120px}
+.pill{font-size:13px;border-radius:999px;padding:2px 10px;font-weight:500}
+.pill.miss{background:var(--miss-bg);color:var(--miss)}
+.pill.done{background:var(--done-bg);color:var(--done)}
+.note{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:6px 10px;font-size:14px;color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{border:none;border-radius:14px;min-height:68px;padding:8px 4px;display:grid;place-items:center;gap:2px;font-size:14px;line-height:1.25;font-weight:500}
+.tile .ti{font-size:20px;font-weight:700;line-height:1}
+.tile.done{background:var(--done-bg);color:var(--done)}
+.tile.miss{background:var(--miss-bg);color:var(--miss)}
+.tile.na{background:var(--na-bg);color:var(--na)}
+.tile.none{background:var(--none-bg);color:var(--none)}
+.tile.open{outline:2px solid var(--accent)}
+.sheet{margin-top:10px;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px}
+.sheet-h{margin-bottom:8px;font-weight:500}
+.sopts{display:flex;flex-wrap:wrap;gap:6px}
+.sopt{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:500}
+.sopt.done{color:var(--done)} .sopt.miss{color:var(--miss)} .sopt.na{color:var(--na)}
+.sopt.sel{outline:2px solid var(--accent)}
+.sopt.clear{color:var(--muted)}
+.drow{display:flex;align-items:center;gap:8px;margin-top:10px}
+.notebox{width:100%;min-height:70px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--soft);font:inherit}
+.status{font-size:14px;color:var(--muted);margin:10px 0 0}
+
+.banner{border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:15px;line-height:1.8}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner.alert{background:var(--miss-bg);color:var(--miss)}
+.banner.ok{background:var(--done-bg);color:var(--done)}
+.tag{display:inline-block;background:var(--miss-bg);color:var(--miss);border-radius:8px;padding:1px 8px;font-size:13px;margin-inline-start:6px}
+
+/* panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.panel h2{font-size:18px;font-weight:700;margin:0 0 10px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-input[type=text],input[type=date],input[type=file]{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:0;max-width:100%}
-input[type=text]{flex:1;min-width:180px}
-textarea{font:inherit;width:100%;min-height:120px;padding:10px;border:1px solid var(--line);border-radius:10px;direction:ltr;text-align:left;font-size:12px}
-button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#fff;padding:8px 14px;color:var(--ink)}
-button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-button.danger{color:var(--alert);border-color:#fca5a5}
-button.on-done{background:var(--ok);color:#fff;border-color:var(--ok)}
-button.on-no{background:var(--no);color:#fff;border-color:var(--no)}
-.banner{border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.8}
-.banner.warn{background:var(--nobg);border:1px solid #fcd34d}
-.banner.alert{background:var(--alertbg);border:1px solid #fca5a5;color:var(--alert)}
-.banner.ok{background:var(--okbg);border:1px solid #86efac}
-.person{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px}
-.person h3{margin:0;font-size:17px}
-.line{font-size:14px;margin:6px 0;line-height:1.8}
-.tag{display:inline-block;background:var(--alertbg);color:var(--alert);border-radius:8px;padding:2px 8px;font-size:12px;margin-inline-start:6px}
-.weekrow{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px}
-.label{font-weight:700;margin-bottom:6px}
-.muted{color:var(--muted);font-size:13px}
-.kind{min-width:64px;font-size:14px}
-.sub{margin-top:14px}
+input[type=text],input[type=number],input[type=date],input[type=file],select{font:inherit;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:var(--soft);min-width:0;max-width:100%}
+input[type=text]{flex:1;min-width:140px}
+input[type=number]{width:84px}
+.btn{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:8px 14px;font-weight:500}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:700}
+.btn.danger{color:var(--miss)}
+.btn.armed{background:var(--miss);color:#fff;border-color:var(--miss)}
+.subhead{font-size:14px;color:var(--muted);margin:10px 0 6px}
+textarea.out{width:100%;min-height:120px;padding:10px;border:1px solid var(--line);border-radius:12px;direction:ltr;text-align:left;font-size:13px;background:var(--soft)}
+.person-line{font-size:15px;margin:5px 0;line-height:1.8}
+
+/* settings table */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table.cfg{width:100%;border-collapse:collapse;min-width:620px;background:var(--surface)}
+table.cfg th,table.cfg td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle;text-align:right}
+table.cfg th{font-size:14px;color:var(--muted);font-weight:500;background:var(--soft)}
+table.cfg tr:last-child td{border-bottom:none}
+table.cfg input[type=text]{min-width:110px}
+table.cfg input[type=number]{width:72px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 6px 3px 8px;background:var(--soft)}
+.chip input[type=text]{min-width:70px;max-width:110px;padding:4px 6px;border:none;background:transparent}
+.chip select{padding:2px 4px;font-size:13px;border:none;background:transparent}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
+.dot.done{background:var(--done)} .dot.miss{background:var(--miss)} .dot.na{background:var(--na)}
+.chip .x{border:none;background:transparent;color:var(--muted);font-size:16px;padding:0 4px}
+.addopt{display:flex;gap:6px;margin-top:6px}
+.addopt input[type=text]{min-width:110px;max-width:160px}
+.addopt button{padding:5px 10px;border-radius:10px;border:1px solid var(--line);background:var(--soft)}
+.namerow{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.namerow:last-child{border-bottom:none}
+.namerow input{flex:1}
 </style>
 </head>
 <body>
-<header>
-  <h1>متابعة التناول والاعتراف</h1>
-  <p>سجّل أسبوعيًا، وتابع التنبيهات من شاشة المتابعة.</p>
-  <nav>
-    <a href="#record" id="nav-record">تسجيل الأسبوع</a>
-    <a href="#follow" id="nav-follow">المتابعة</a>
-  </nav>
-</header>
-<main>
+<div class="wrap">
+  <div class="head">
+    <h1 class="brand">النوتة الروحية</h1>
+    <button class="iconbtn" id="themeBtn" title="تغيير الوضع">☾</button>
+  </div>
   <div id="app"></div>
-</main>
+</div>
 <script>
-const KEY = 'tanawol-etiraf-v1';
-let state;
-try { state = JSON.parse(localStorage.getItem(KEY)) || { people: [] }; } catch (e) { state = { people: [] }; }
-if (!Array.isArray(state.people)) state.people = [];
-const view = { day: '' };
+const KEY = 'nawta-rohiya-v2';
+const OLD = 'nawta-rohiya-v1';
+const THEME_KEY = 'nawta-theme';
+
+/* ---------- الوضع: فاتح / داكن ---------- */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  const b = document.getElementById('themeBtn');
+  if (b) b.textContent = t === 'dark' ? '☀' : '☾';
+}
+function initTheme(){
+  let t = null;
+  try { t = localStorage.getItem(THEME_KEY); } catch (e) {}
+  if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  applyTheme(t);
+}
+function toggleTheme(){
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(t);
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+}
+
+/* ---------- البيانات ---------- */
+function newId(p){ return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function defaultOpts(){
+  return [
+    { id: newId('o'), label: 'تم', kind: 'done' },
+    { id: newId('o'), label: 'لم يتم', kind: 'miss' },
+    { id: newId('o'), label: 'لا ينطبق', kind: 'na' }
+  ];
+}
+function seed(){
+  return {
+    cats: [
+      { id: newId('c'), name: 'تناول', days: 30, opts: defaultOpts() },
+      { id: newId('c'), name: 'اعتراف', days: 60, opts: defaultOpts() },
+      { id: newId('c'), name: 'حضور', days: null, opts: defaultOpts() }
+    ],
+    people: []
+  };
+}
+function load(){
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
+  if (!s) { try { const o = JSON.parse(localStorage.getItem(OLD)); if (o && Array.isArray(o.cats)) s = o; } catch (e) {} }
+  if (!s || !Array.isArray(s.cats)) s = seed();
+  if (!Array.isArray(s.people)) s.people = [];
+  s.cats.forEach(c => {
+    c.opts = (c.opts || []).map(o => ({ id: o.id, label: o.label, kind: o.kind || (o.pos ? 'done' : 'miss') }));
+  });
+  s.people.forEach(p => { p.rec = p.rec || p.records || {}; p.notes = p.notes || {}; delete p.records; });
+  return s;
+}
+let state = load();
+const view = { day: '', q: '', open: null, noteOpen: null };
 let armed = null;
-let flash = null;   // {msg, cls}
-let out = null;     // {text, msg} fallback when direct download is refused
+let flash = null;
+let out = null;
 
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
-function newId(){ return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function pad(n){ return String(n).padStart(2, '0'); }
 function toKey(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 function fromKey(k){ const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); }
+function addDays(k, n){ const d = fromKey(k); d.setDate(d.getDate() + n); return toKey(d); }
 function todayKey(){ return toKey(new Date()); }
-function weekStart(k){ // الأسبوع يبدأ يوم السبت
-  const d = fromKey(k);
-  d.setDate(d.getDate() - ((d.getDay() - 6 + 7) % 7));
-  return toKey(d);
-}
+function weekStart(k){ return addDays(k, -((fromKey(k).getDay() - 6 + 7) % 7)); }
 function fmt(k){ return fromKey(k).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }); }
 function daysAgo(k){ return Math.round((fromKey(todayKey()) - fromKey(k)) / 86400000); }
-function monthsBefore(n){
-  const t = new Date();
-  const d = new Date(t.getFullYear(), t.getMonth() - n, 1);
-  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-  d.setDate(Math.min(t.getDate(), last));
-  return toKey(d);
-}
-function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function validKey(k){ return /^\d{4}-\d{2}-\d{2}$/.test(k) && !isNaN(fromKey(k)); }
 function parseDate(s){
   s = (s || '').trim();
   let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (m) { const k = m[1] + '-' + pad(+m[2]) + '-' + pad(+m[3]); return validKey(k) ? k : ''; }
-  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // dd/mm/yyyy
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) { const k = m[3] + '-' + pad(+m[2]) + '-' + pad(+m[1]); return validKey(k) ? k : ''; }
   return '';
 }
-function lab(s){ return s === 'done' ? 'تم' : s === 'no' ? 'لم يتم' : ''; }
-
-function lastDate(p, type){
+function catById(id){ return state.cats.find(c => c.id === id); }
+function personById(id){ return state.people.find(p => p.id === id); }
+function optOf(cat, oid){ return cat.opts.find(o => o.id === oid); }
+function setEntry(p, wk, catId, oid, date){
+  p.rec[wk] = p.rec[wk] || {};
+  if (oid === null) delete p.rec[wk][catId];
+  else p.rec[wk][catId] = { o: oid, d: date || null };
+}
+function lastDate(p, cat){
   let best = null;
-  for (const wk in p.records) {
-    const r = p.records[wk][type];
-    if (r && r.s === 'done' && r.d && (!best || r.d > best)) best = r.d;
+  for (const wk in p.rec) {
+    const e = p.rec[wk][cat.id];
+    if (!e || !e.d) continue;
+    const o = optOf(cat, e.o);
+    if (o && o.kind === 'done' && (!best || e.d > best)) best = e.d;
   }
   return best;
 }
-function setRec(p, wk, type, status, date){
-  p.records[wk] = p.records[wk] || {};
-  if (status === null) delete p.records[wk][type];
-  else p.records[wk][type] = { s: status, d: status === 'done' ? date : null };
-}
 function computeInfo(){
-  const cutComm = monthsBefore(1), cutConf = monthsBefore(2);
-  return state.people.map(p => {
-    const lc = lastDate(p, 'comm'), lf = lastDate(p, 'conf');
-    return { p, lc, lf, ac: !lc || lc < cutComm, af: !lf || lf < cutConf };
-  });
+  return state.people.map(p => ({
+    p,
+    cats: state.cats.map(c => {
+      const last = lastDate(p, c);
+      const over = c.days == null ? false : (!last || daysAgo(last) > c.days);
+      return { c, last, over };
+    })
+  }));
 }
+function missingFor(p, wk){ return state.cats.filter(c => !(p.rec[wk] && p.rec[wk][c.id])); }
+function backupJSON(){ return JSON.stringify({ version: 3, cats: state.cats, people: state.people }, null, 2); }
 
 /* ---------- شاشة التسجيل ---------- */
-function statusBtns(p, wk, type){
-  const r = (p.records[wk] || {})[type];
-  const s = r ? r.s : null;
-  let h = `<button class="${s === 'done' ? 'on-done' : ''}" data-act="set" data-id="${p.id}" data-wk="${wk}" data-type="${type}" data-s="done">تم</button>`
-        + `<button class="${s === 'no' ? 'on-no' : ''}" data-act="set" data-id="${p.id}" data-wk="${wk}" data-type="${type}" data-s="no">لم يتم</button>`;
-  if (s === 'done') h += `<input type="date" value="${r.d || view.day}" data-date data-id="${p.id}" data-wk="${wk}" data-type="${type}">`;
-  return h;
+function tile(p, wk, c){
+  const e = (p.rec[wk] || {})[c.id];
+  const o = e ? optOf(c, e.o) : null;
+  const k = o ? o.kind : 'none';
+  const icon = { done: '✓', miss: '✕', na: '–', none: '•' }[k];
+  const isOpen = view.open && view.open.p === p.id && view.open.c === c.id;
+  return `<button class="tile ${k} ${isOpen ? 'open' : ''}" data-act="open" data-p="${p.id}" data-c="${c.id}" title="${esc(o ? o.label : 'لم يتسجل')}">
+    <span class="ti">${icon}</span><span>${esc(c.name)}</span></button>`;
 }
-function renderRecord(){
-  const cur = weekStart(todayKey()), wk = weekStart(view.day);
-  const missing = state.people.filter(p => { const r = p.records[cur] || {}; return !r.comm || !r.conf; }).map(p => p.name);
-  let h = `<section>
-    <h2>إضافة اسم</h2>
-    <div class="row"><input type="text" id="newName" placeholder="اكتب الاسم"><button class="primary" data-act="add">إضافة</button></div>
-  </section>`;
-  h += `<section>
-    <h2>تسجيل الأسبوع</h2>
-    <div class="row">
-      <span>اختار أي يوم في الأسبوع:</span>
-      <input type="date" id="dayPick" value="${view.day}">
-      <span class="muted">الأسبوع من السبت ${fmt(wk)}</span>
+function sheet(p, wk){
+  const c = catById(view.open.c);
+  if (!c) return '';
+  const e = (p.rec[wk] || {})[c.id];
+  const o = e ? optOf(c, e.o) : null;
+  if (!c.opts.length) return `<div class="sheet"><span class="muted">مفيش اختيارات للحاجة دي. أضيفيها من الإعدادات.</span></div>`;
+  return `<div class="sheet">
+    <div class="sheet-h">${esc(c.name)} <span class="muted">— اختاري:</span></div>
+    <div class="sopts">
+      ${c.opts.map(x => `<button class="sopt ${x.kind} ${o && o.id === x.id ? 'sel' : ''}" data-act="set" data-p="${p.id}" data-w="${wk}" data-c="${c.id}" data-o="${x.id}">${esc(x.label)}</button>`).join('')}
+      ${e ? `<button class="sopt clear" data-act="clear" data-p="${p.id}" data-w="${wk}" data-c="${c.id}">مسح</button>` : ''}
     </div>
-    ${missing.length ? `<div class="banner warn" style="margin-top:12px"><b>تنبيه الأسبوع:</b> لم تُسجَّل بعد خانات التناول أو الاعتراف لأسبوع الحالي (يبدأ ${fmt(cur)}) لـ: ${missing.map(esc).join('، ')}</div>` : ''}
-    <p class="muted">اختار "تم" أو "لم يتم". عند "تم" يظهر تاريخ تقدر تعدله (افتراضيًا اليوم المختار).</p>
-    ${state.people.map(p => `
-      <div class="weekrow">
-        <div class="label">${esc(p.name)}</div>
-        <div class="row"><span class="kind">التناول</span>${statusBtns(p, wk, 'comm')}</div>
-        <div class="row" style="margin-top:6px"><span class="kind">الاعتراف</span>${statusBtns(p, wk, 'conf')}</div>
-      </div>`).join('') || '<p class="muted">أضف أسماء أولًا.</p>'}
-  </section>`;
+    ${o && o.kind === 'done' ? `<div class="drow"><span class="muted">التاريخ:</span><input type="date" value="${e.d || view.day}" data-date data-p="${p.id}" data-w="${wk}" data-c="${c.id}"></div>` : ''}
+  </div>`;
+}
+function renderRecord(wk){
+  const q = view.q.trim();
+  const list = state.people.filter(p => !q || p.name.includes(q));
+  let total = 0, filled = 0, missingPeople = 0;
+  state.people.forEach(p => {
+    total += state.cats.length;
+    const m = missingFor(p, wk).length;
+    filled += state.cats.length - m;
+    if (m) missingPeople++;
+  });
+  let h = `<div class="toolbar">
+    <input type="text" id="q" placeholder="ابحثي باسم المخدومة" value="${esc(view.q)}">
+    <span class="count">مسجّل: ${filled} من ${total}${missingPeople ? ' · ناقص عند ' + missingPeople + ' مخدومة' : ''}</span>
+  </div>`;
+  if (!state.cats.length) h += `<div class="panel"><span class="muted">مفيش حاجات تتابعيها. روحي الإعدادات وأضيفي حاجة الأول.</span></div>`;
+  else if (!state.people.length) h += `<div class="panel"><span class="muted">أضيفي أسماء المخدومات من الإعدادات الأول.</span></div>`;
+  else if (!list.length) h += `<div class="panel"><span class="muted">مفيش مخدومة بالاسم ده.</span></div>`;
+  h += list.map(p => {
+    const m = missingFor(p, wk);
+    return `<article class="card ${m.length ? 'missing' : ''}">
+      <div class="chead">
+        <h3>${esc(p.name)}</h3>
+        ${m.length ? `<span class="pill miss">ناقص ${esc(m.map(c => c.name).join('، '))}</span>` : `<span class="pill done">مكتمل</span>`}
+        <button class="note" data-act="note" data-p="${p.id}">📝 ملاحظة</button>
+      </div>
+      <div class="tiles">${state.cats.map(c => tile(p, wk, c)).join('')}</div>
+      ${view.open && view.open.p === p.id ? sheet(p, wk) : ''}
+      ${view.noteOpen === p.id ? `<textarea class="notebox" data-note data-p="${p.id}" data-w="${wk}" placeholder="اكتبي ملاحظة الأسبوع">${esc((p.notes || {})[wk] || '')}</textarea>` : ''}
+      ${m.length ? `<p class="status">لسه ما اتسجلش: ${esc(m.map(c => c.name).join('، '))}</p>` : ''}
+    </article>`;
+  }).join('');
   return h;
 }
 
-/* ---------- شاشة المتابعة ---------- */
+/* ---------- المتابعة ---------- */
 function renderFollow(){
   const info = computeInfo();
+  const cur = weekStart(todayKey());
   let h = '';
-  if (flash) { h += `<div class="banner ${flash.cls}">${esc(flash.msg)}</div>`; flash = null; }
-  if (info.length) {
-    const alertLines = info.filter(i => i.ac || i.af).map(i => {
-      const parts = [];
-      if (i.ac) parts.push('التناول فات عليه أكتر من شهر');
-      if (i.af) parts.push('الاعتراف فات عليه أكتر من شهرين');
-      return `<div>${esc(i.p.name)}: ${parts.join(' — ')}</div>`;
-    }).join('');
-    if (alertLines) h += `<div class="banner alert"><b>تنبيهات التأخير:</b>${alertLines}</div>`;
-    else h += `<div class="banner ok">لا توجد تنبيهات تأخير حاليًا.</div>`;
-  }
-  h += `<section>
+  const alerts = [];
+  info.forEach(i => i.cats.forEach(x => {
+    if (x.over) alerts.push(`<div>${esc(i.p.name)}: ${esc(x.c.name)} ${x.last ? 'فات عليها أكتر من ' + x.c.days + ' يوم' : 'ولا مرة اتسجل'}</div>`);
+  }));
+  if (alerts.length) h += `<div class="banner alert"><b>تنبيهات التأخير:</b>${alerts.join('')}</div>`;
+  else if (state.cats.some(c => c.days != null) && info.length) h += `<div class="banner ok">مفيش تنبيهات تأخير حاليًا.</div>`;
+
+  h += `<section class="panel">
     <h2>إزاي بنحسب التواريخ والتنبيهات؟</h2>
     <ul class="muted" style="padding-inline-start:18px;line-height:1.9;margin:0">
-      <li><b>آخر تناول</b> = أحدث تاريخ اتسجل فيه "تم" في خانة التناول لأي أسبوع.</li>
-      <li><b>آخر اعتراف</b> = أحدث تاريخ اتسجل فيه "تم" في خانة الاعتراف لأي أسبوع.</li>
-      <li>التاريخ هو اللي مكتوب في خانة التاريخ بعد "تم" (افتراضيًا اليوم المختار في شاشة التسجيل)، ويقدر تعدله.</li>
-      <li>تنبيه التناول بيظهر لو آخر تناول أقدم من شهر من النهارده، وتنبيه الاعتراف لو أقدم من شهرين. ولو مفيش "تم" خالص، بيعتبر متأخر.</li>
-      <li>"منذ X يوم" بتتحسب من النهارده لحد التاريخ ده.</li>
+      <li><b>آخر تاريخ</b> لكل حاجة = أحدث تاريخ اتسجل فيه اختيار أخضر (تم) في الحاجة دي.</li>
+      <li>التاريخ هو اللي في خانة التاريخ بعد الاختيار، وافتراضيًا اليوم اللي اخترتيه في الكروت.</li>
+      <li>التنبيه بيظهر لو الفترة من آخر تاريخ لحد النهارده أكبر من عدد الأيام اللي حددتيه للحاجة. ولو مفيش تسجيل خالص، بتعتبر متأخرة.</li>
+      <li>الحاجة اللي مفيش ليها عدد أيام، مفيش ليها تنبيه.</li>
     </ul>
-  </section>
-  <section>
-    <h2>الأسماء ومتابعتها</h2>
-    ${info.map(i => {
-      const commLine = i.lc
-        ? `آخر تناول كان يوم <b>${fmt(i.lc)}</b> <span class="muted">(منذ ${daysAgo(i.lc)} يوم)</span>`
-        : `<span class="muted">لم يُسجَّل تناول بعد</span>`;
-      const confLine = i.lf
-        ? `آخر اعتراف كان يوم <b>${fmt(i.lf)}</b> <span class="muted">(منذ ${daysAgo(i.lf)} يوم)</span>`
-        : `<span class="muted">لم يُسجَّل اعتراف بعد</span>`;
-      return `<div class="person">
-        <div class="row">
-          <h3>${esc(i.p.name)}</h3>
-          <button class="danger" style="margin-inline-start:auto" data-act="del" data-id="${i.p.id}">${armed === i.p.id ? 'اضغط للتأكيد' : 'حذف'}</button>
-        </div>
-        <div class="line">${commLine}${i.ac ? '<span class="tag">التناول فات عليه أكتر من شهر</span>' : ''}</div>
-        <div class="line">${confLine}${i.af ? '<span class="tag">الاعتراف فات عليه أكتر من شهرين</span>' : ''}</div>
-      </div>`;
-    }).join('') || '<p class="muted">لم تضف أي اسم بعد.</p>'}
   </section>`;
 
-  h += `<section>
-    <h2>التصدير والاستيراد</h2>
+  h += `<section class="panel"><h2>المخدومات ومتابعتهم</h2>
+    ${info.map(i => `<div class="card ${i.cats.some(x => x.over) ? 'missing' : ''}" style="margin-bottom:8px">
+      <h3 style="margin:0 0 6px;font-size:18px">${esc(i.p.name)}</h3>
+      ${i.cats.map(x => `<div class="person-line">آخر ${esc(x.c.name)}: ${x.last
+        ? `كان يوم <b>${fmt(x.last)}</b> <span class="muted">(من ${daysAgo(x.last)} يوم)</span>`
+        : `<span class="muted">لم يُسجَّل بعد</span>`}${x.over ? `<span class="tag">متأخرة${x.c.days != null ? ' (أكتر من ' + x.c.days + ' يوم)' : ''}</span>` : ''}</div>`).join('') || '<span class="muted">مفيش حاجات متابعة</span>'}
+    </div>`).join('') || '<p class="muted">لسه ما أضفتيش أسماء مخدومات.</p>'}
+  </section>`;
+
+  h += `<section class="panel">
+    <h2>التصدير</h2>
     <div class="row">
-      <button class="primary" data-act="exp" data-kind="records">تصدير التسجيلات (Excel)</button>
-      <button data-act="exp" data-kind="summary">تصدير الملخص (Excel)</button>
-      <button data-act="exp" data-kind="json">نسخة احتياطية (JSON)</button>
+      <button class="btn primary" data-act="exp" data-kind="records">تسجيلات الأسابيع (Excel)</button>
+      <button class="btn" data-act="exp" data-kind="summary">ملخص المتابعة (Excel)</button>
+      <button class="btn" data-act="exp" data-kind="names">قائمة الأسماء (Excel)</button>
+      <button class="btn" data-act="exp" data-kind="json">نسخة احتياطية (JSON)</button>
     </div>
-    <p class="muted">ملفات Excel بتتصدر بصيغة CSV وبترميز UTF-8 عشان العربي يظهر صح. افتحها في Excel أو احفظها كـ CSV بعدين.</p>
-    <div class="sub">
-      <div class="row">
-        <label class="muted">استيراد من ملف JSON أو CSV (نفس تنسيق التصدير):</label>
-        <input type="file" id="importFile" accept=".json,.csv,text/csv,application/json">
-      </div>
-      <p class="muted">الاستيراد بيضيف الأسماء الجديدة ويدمج التسجيلات مع الموجود (التسجيل المستورد بيحل محل نفس الأسبوع).</p>
-    </div>
-    ${out ? `<div class="sub"><div class="muted">${esc(out.msg)}</div><textarea readonly id="outBox">${esc(out.text)}</textarea><div class="row" style="margin-top:6px"><button data-act="copy">نسخ النص</button></div></div>` : ''}
+    <p class="muted">ملفات Excel بتتصدر بصيغة CSV وترميز UTF-8 عشان العربي يظهر صح.</p>
+    ${out ? `<div class="subhead">${esc(out.msg)}</div><textarea readonly id="outBox" class="out">${esc(out.text)}</textarea><div class="row" style="margin-top:6px"><button class="btn" data-act="copy">نسخ النص</button></div>` : ''}
   </section>`;
   return h;
 }
 
+/* ---------- الإعدادات: جدول ---------- */
+function renderSettings(){
+  let h = `<section class="panel"><h2>الحاجات اللي بتتابعيها</h2>
+    <p class="muted">كل حاجة في سطر: اسمها، وعدد الأيام للتنبيه، واختياراتها. كل اختيار ليه نقطة لونها: أخضر = تم (بيطلب تاريخ)، وأحمر = لم يتم، وأزرق = لا ينطبق. تقدري تضيفي اختيارات زيادة بزرار +.</p>
+    <div class="tbl-wrap"><table class="cfg">
+      <thead><tr><th>الحاجة</th><th>التنبيه (يوم)</th><th>الاختيارات</th><th></th></tr></thead>
+      <tbody>`;
+  state.cats.forEach(c => {
+    h += `<tr>
+      <td><input type="text" value="${esc(c.name)}" data-cat-name data-c="${c.id}"></td>
+      <td><input type="number" min="1" value="${c.days == null ? '' : c.days}" data-cat-days data-c="${c.id}" placeholder="بدون"></td>
+      <td>
+        <div class="chips">
+          ${c.opts.map(o => `<span class="chip">
+            <i class="dot ${o.kind}"></i>
+            <input type="text" value="${esc(o.label)}" data-opt-label data-c="${c.id}" data-o="${o.id}">
+            <select data-opt-kind data-c="${c.id}" data-o="${o.id}">
+              <option value="done" ${o.kind === 'done' ? 'selected' : ''}>أخضر</option>
+              <option value="miss" ${o.kind === 'miss' ? 'selected' : ''}>أحمر</option>
+              <option value="na" ${o.kind === 'na' ? 'selected' : ''}>أزرق</option>
+            </select>
+            <button class="x ${armed === 'o:' + o.id ? 'armed' : ''}" data-act="del-opt" data-c="${c.id}" data-o="${o.id}" title="حذف الاختيار">${armed === 'o:' + o.id ? 'تأكيد' : '×'}</button>
+          </span>`).join('')}
+        </div>
+        <div class="addopt">
+          <input type="text" id="optin-${c.id}" placeholder="اختيار جديد" data-enter-add="opt" data-c="${c.id}">
+          <button data-act="add-opt" data-c="${c.id}">+</button>
+        </div>
+      </td>
+      <td><button class="btn danger ${armed === 'c:' + c.id ? 'armed' : ''}" data-act="del-cat" data-c="${c.id}">${armed === 'c:' + c.id ? 'تأكيد' : 'حذف'}</button></td>
+    </tr>`;
+  });
+  h += `</tbody></table></div>
+    <div class="row" style="margin-top:12px">
+      <input type="text" id="newCat" placeholder="حاجة جديدة، مثلاً: قراءة">
+      <button class="btn primary" data-act="add-cat">أضيفي الحاجة</button>
+    </div>
+  </section>`;
+
+  h += `<section class="panel"><h2>أسماء المخدومات</h2>
+    <div class="row">
+      <input type="text" id="newName" placeholder="اكتبي اسم المخدومة وأضيفيها">
+      <button class="btn primary" data-act="add-person">إضافة</button>
+    </div>
+    <p class="muted" style="margin-top:8px">تقدري تعدلي أي اسم بالكتابة فيه مباشرة.</p>
+    <div style="margin-top:6px">
+    ${state.people.map(p => `<div class="namerow">
+      <input type="text" value="${esc(p.name)}" data-person-name data-p="${p.id}">
+      <button class="btn danger ${armed === 'p:' + p.id ? 'armed' : ''}" data-act="del-person" data-p="${p.id}">${armed === 'p:' + p.id ? 'تأكيد' : 'حذف'}</button>
+    </div>`).join('') || '<p class="muted">لسه ما فيش أسماء.</p>'}
+    </div>
+  </section>`;
+
+  h += `<section class="panel"><h2>الاستيراد من Excel أو نسخة احتياطية</h2>
+    <input type="file" id="importFile" accept=".csv,.json,text/csv,application/json">
+    <p class="muted" style="margin-top:10px">• <b>قائمة أسماء:</b> ملف CSV أول عمود فيه الأسماء (ممكن يكون فيه صف عنوان اسمه "الاسم").<br>
+    • <b>تسجيلات:</b> ملف "تسجيلات الأسابيع" المصدّر من البرنامج، بعد ما تعدليه في Excel من غير ما تغيّري أسماء الأعمدة.<br>
+    • <b>نسخة احتياطية:</b> ملف JSON.<br>
+    الاستيراد بيضيف الأسماء والحاجات الجديدة، ويدمج التسجيلات مع الموجود.</p>
+  </section>`;
+  return h;
+}
+
+/* ---------- الرسم ---------- */
+function tabs(s){
+  return `<nav class="tabs">
+    <a href="#record" class="seg ${s === 'record' ? 'on' : ''}">الكروت</a>
+    <a href="#follow" class="seg ${s === 'follow' ? 'on' : ''}">المتابعة</a>
+    <a href="#settings" class="seg ${s === 'settings' ? 'on' : ''}">الإعدادات</a>
+  </nav>`;
+}
+function topcard(wk){
+  return `<div class="topcard">
+    <button class="nav" data-act="week" data-d="7">التالي</button>
+    <div class="wt">
+      <strong>الأسبوع</strong>
+      <span>من السبت ${fmt(wk)}</span>
+      <input type="date" id="dayPick" value="${view.day}">
+    </div>
+    <button class="nav" data-act="week" data-d="-7">السابق</button>
+  </div>`;
+}
 function render(){
   if (!view.day) view.day = todayKey();
-  const screen = location.hash === '#follow' ? 'follow' : 'record';
-  document.getElementById('nav-record').classList.toggle('active', screen === 'record');
-  document.getElementById('nav-follow').classList.toggle('active', screen === 'follow');
-  document.getElementById('app').innerHTML = screen === 'follow' ? renderFollow() : renderRecord();
+  const s = location.hash === '#follow' ? 'follow' : location.hash === '#settings' ? 'settings' : 'record';
+  const wk = weekStart(view.day);
+  let html = (s === 'record' ? topcard(wk) : '') + tabs(s);
+  html += s === 'follow' ? renderFollow() : s === 'settings' ? renderSettings() : renderRecord(wk);
+  if (flash) { html = `<div class="banner ${flash.cls}">${esc(flash.msg)}</div>` + html; flash = null; }
+  document.getElementById('app').innerHTML = html;
 }
 
 /* ---------- تصدير ---------- */
@@ -233,32 +450,38 @@ function toCSV(rows){
   }).join(',')).join('\r\n');
 }
 function recordsCSV(){
-  const rows = [['الاسم', 'بداية الأسبوع (السبت)', 'التناول', 'تاريخ التناول', 'الاعتراف', 'تاريخ الاعتراف']];
+  const rows = [['الاسم', 'بداية الأسبوع (السبت)', 'الحاجة', 'الاختيار', 'التاريخ']];
   state.people.forEach(p => {
-    Object.keys(p.records).sort().forEach(wk => {
-      const r = p.records[wk];
-      if (!r.comm && !r.conf) return;
-      const a = r.comm || {}, b = r.conf || {};
-      rows.push([p.name, wk, lab(a.s), a.s === 'done' ? a.d : '', lab(b.s), b.s === 'done' ? b.d : '']);
+    Object.keys(p.rec).sort().forEach(wk => {
+      state.cats.forEach(c => {
+        const e = p.rec[wk][c.id];
+        if (!e) return;
+        const o = optOf(c, e.o);
+        if (!o) return;
+        rows.push([p.name, wk, c.name, o.label, o.kind === 'done' ? (e.d || '') : '']);
+      });
     });
   });
   return toCSV(rows);
 }
 function summaryCSV(){
-  const rows = [['الاسم', 'آخر تناول', 'آخر اعتراف', 'التناول متأخر (أكتر من شهر)', 'الاعتراف متأخر (أكتر من شهرين)']];
-  computeInfo().forEach(i => rows.push([i.p.name, i.lc || '', i.lf || '', i.ac ? 'نعم' : 'لا', i.af ? 'نعم' : 'لا']));
+  const rows = [['الاسم', ...state.cats.map(c => 'آخر ' + c.name), ...state.cats.map(c => 'متأخرة: ' + c.name)]];
+  computeInfo().forEach(i => rows.push([i.p.name, ...i.cats.map(x => x.last || ''), ...i.cats.map(x => x.over ? 'نعم' : 'لا')]));
   return toCSV(rows);
 }
+function namesCSV(){ return toCSV([['الاسم'], ...state.people.map(p => [p.name])]); }
 async function doExport(kind){
-  let name, text, ext;
-  if (kind === 'records') { name = 'records-tanawol.csv'; text = recordsCSV(); ext = '.csv'; }
-  else if (kind === 'summary') { name = 'summary-tanawol.csv'; text = summaryCSV(); ext = '.csv'; }
-  else { name = 'backup-tanawol.json'; text = JSON.stringify({ version: 1, exported: todayKey(), people: state.people }, null, 2); ext = '.json'; }
-  // أولًا: لو المنصة بتدعم الحفظ المباشر
+  const map = {
+    records: ['records-nawta.csv', recordsCSV, '.csv'],
+    summary: ['summary-nawta.csv', summaryCSV, '.csv'],
+    names: ['names-nawta.csv', namesCSV, '.csv'],
+    json: ['backup-nawta.json', backupJSON, '.json']
+  };
+  const [name, fn, ext] = map[kind];
+  const text = fn();
   let saved = false, dl = null;
   try { const c = window.claude; dl = c ? await c.use('downloads') : null; } catch (e) { dl = null; }
   if (dl) { try { await dl.save({ filename: name, data: text }); saved = true; } catch (e) { saved = false; } }
-  // ثانيًا: تحميل عادي من المتصفح (لصفحات GitHub Pages وغيرها)
   if (!saved) {
     try {
       const a = document.createElement('a');
@@ -271,10 +494,9 @@ async function doExport(kind){
     } catch (e) { saved = false; }
   }
   flash = saved
-    ? { msg: 'اتعمل تحميل للملف ' + name + '. لو ما نزلش، انسخ النص اللي تحت واحفظه بالامتداد ' + ext + '.', cls: 'ok' }
-    : { msg: 'التحميل المباشر اتمنع. انسخ النص اللي تحت واحفظه في ملف اسمه ' + name + '.', cls: 'warn' };
-  // دايمًا نعرض النص كاحتياطي
-  out = { text, msg: 'النص الكامل للملف ' + name + ' (تقدر تنسخه وتحفظه بالامتداد ' + ext + ').' };
+    ? { msg: 'اتعمل تحميل للملف ' + name + '. لو ما نزلش، انسخي النص اللي تحت واحفظيه بالامتداد ' + ext + '.', cls: 'ok' }
+    : { msg: 'التحميل المباشر اتمنع. انسخي النص اللي تحت واحفظيه في ملف اسمه ' + name + '.', cls: 'warn' };
+  out = { text, msg: 'النص الكامل للملف ' + name + ' (تقدري تنسخيه وتحفظيه بالامتداد ' + ext + ').' };
   render();
 }
 async function copyOut(){
@@ -300,60 +522,101 @@ function parseCSV(text){
     else if (ch !== '\r') cur += ch;
   }
   if (cur.length || row.length) { row.push(cur); rows.push(row); }
-  return rows;
+  return rows.filter(r => r.some(c => c.trim()));
 }
-function findOrCreate(name){
+function findOrCreatePerson(name){
   let p = state.people.find(x => x.name === name);
-  if (!p) { p = { id: newId(), name, records: {} }; state.people.push(p); }
+  if (!p) { p = { id: newId('p'), name, rec: {}, notes: {} }; state.people.push(p); }
   return p;
 }
-function importCSV(text){
+function findOrCreateCat(name){
+  let c = state.cats.find(x => x.name === name);
+  if (!c) { c = { id: newId('c'), name, days: null, opts: defaultOpts() }; state.cats.push(c); }
+  return c;
+}
+function applyRow(name, wk, catName, optLabel, kind, date){
+  const p = findOrCreatePerson(name);
+  const c = findOrCreateCat(catName);
+  let o = c.opts.find(x => x.label === optLabel);
+  if (!o) { o = { id: newId('o'), label: optLabel, kind }; c.opts.push(o); }
+  const w = weekStart(wk);
+  setEntry(p, w, c.id, o.id, o.kind === 'done' ? (date || w) : null);
+}
+function guessKind(label){ return label === 'تم' ? 'done' : label === 'لا ينطبق' ? 'na' : 'miss'; }
+function importRecords(rows){
   let n = 0;
-  parseCSV(text).forEach(r => {
+  rows.slice(1).forEach(r => {
+    const name = (r[0] || '').trim();
+    const wkDate = parseDate(r[1]);
+    const catName = (r[2] || '').trim();
+    const optLabel = (r[3] || '').trim();
+    if (!name || !wkDate || !catName || !optLabel) return;
+    applyRow(name, wkDate, catName, optLabel, guessKind(optLabel), parseDate(r[4]));
+    n++;
+  });
+  return n;
+}
+function importNames(rows){
+  let n = 0;
+  rows.forEach(r => {
     const name = (r[0] || '').trim();
     if (!name || name === 'الاسم') return;
-    const weekDate = parseDate(r[1]);
-    if (!weekDate) return;
-    const wk = weekStart(weekDate);
-    const p = findOrCreate(name);
-    const apply = (label, date, type) => {
-      const l = (label || '').trim();
-      if (l === 'تم') setRec(p, wk, type, 'done', parseDate(date) || weekDate);
-      else if (l === 'لم يتم') setRec(p, wk, type, 'no', null);
-    };
-    apply(r[2], r[3], 'comm');
-    apply(r[4], r[5], 'conf');
+    findOrCreatePerson(name);
     n++;
   });
   return n;
 }
 function importJSON(text){
   const data = JSON.parse(text);
-  const list = Array.isArray(data) ? data : data.people;
-  if (!Array.isArray(list)) throw new Error('bad');
-  let n = 0;
-  list.forEach(ip => {
-    if (!ip || typeof ip.name !== 'string' || !ip.name.trim()) return;
-    const p = findOrCreate(ip.name.trim());
-    const recs = ip.records || {};
-    Object.keys(recs).forEach(wk => {
-      if (!validKey(wk)) return;
-      const w = weekStart(wk);
-      p.records[w] = Object.assign({}, p.records[w] || {}, recs[wk]);
+  if (!data || !Array.isArray(data.people)) throw new Error('bad');
+  const cats = Array.isArray(data.cats) ? data.cats : [];
+  cats.forEach(ic => {
+    if (!ic || typeof ic.name !== 'string') return;
+    const c = findOrCreateCat(ic.name.trim());
+    if (c.days == null && ic.days != null) c.days = ic.days;
+    (ic.opts || []).forEach(io => {
+      if (io && typeof io.label === 'string' && !c.opts.find(x => x.label === io.label)) {
+        c.opts.push({ id: newId('o'), label: io.label, kind: io.kind || (io.pos ? 'done' : 'miss') });
+      }
     });
-    n++;
+  });
+  const byId = {};
+  cats.forEach(c => { if (c) byId[c.id] = c; });
+  let n = 0;
+  data.people.forEach(ip => {
+    if (!ip || typeof ip.name !== 'string' || !ip.name.trim()) return;
+    const name = ip.name.trim();
+    const person = findOrCreatePerson(name);
+    if (ip.notes) Object.keys(ip.notes).forEach(w => { if (validKey(w)) person.notes[weekStart(w)] = ip.notes[w]; });
+    const rec = ip.rec || {};
+    Object.keys(rec).forEach(wk => {
+      if (!validKey(wk) || !rec[wk]) return;
+      Object.keys(rec[wk]).forEach(cid => {
+        const ic = byId[cid], e = rec[wk][cid];
+        if (!ic || !e) return;
+        const io = (ic.opts || []).find(o => o.id === e.o);
+        if (!io) return;
+        applyRow(name, wk, ic.name, io.label, io.kind || (io.pos ? 'done' : 'miss'), e.d);
+        n++;
+      });
+    });
   });
   return n;
 }
 function doImport(text, fname){
   try {
     const t = text.trim();
-    const isJSON = /\.json$/i.test(fname) || t.charAt(0) === '{' || t.charAt(0) === '[';
-    const n = isJSON ? importJSON(text) : importCSV(text);
+    let n;
+    if (/\.json$/i.test(fname) || t.charAt(0) === '{') n = importJSON(t);
+    else {
+      const rows = parseCSV(text);
+      const isRecords = (rows[0] || []).indexOf('الحاجة') > -1;
+      n = isRecords ? importRecords(rows) : importNames(rows);
+    }
     save();
-    flash = { msg: 'تم الاستيراد: ' + n + ' سطر/اسم', cls: 'ok' };
+    flash = { msg: 'تم الاستيراد: ' + n + ' سطر', cls: 'ok' };
   } catch (e) {
-    flash = { msg: 'الملف مش مفهوم. اتأكد إنه ملف النسخة الاحتياطية (JSON) أو ملف CSV بنفس تنسيق التصدير.', cls: 'warn' };
+    flash = { msg: 'الملف مش مفهوم. اتأكدي إنه قائمة أسماء (CSV) أو تسجيلات أو نسخة احتياطية (JSON) من البرنامج.', cls: 'warn' };
   }
   render();
 }
@@ -364,51 +627,150 @@ function addPerson(){
   if (!inp) return;
   const n = inp.value.trim();
   if (!n) return;
-  state.people.push({ id: newId(), name: n, records: {} });
+  state.people.push({ id: newId('p'), name: n, rec: {}, notes: {} });
   save(); render();
 }
+function addCat(){
+  const inp = document.getElementById('newCat');
+  if (!inp) return;
+  const n = inp.value.trim();
+  if (!n) return;
+  state.cats.push({ id: newId('c'), name: n, days: null, opts: defaultOpts() });
+  save(); render();
+}
+function addOpt(catId){
+  const inp = document.getElementById('optin-' + catId);
+  const c = catById(catId);
+  if (!inp || !c) return;
+  const label = inp.value.trim();
+  if (!label) return;
+  c.opts.push({ id: newId('o'), label, kind: 'miss' });
+  save(); render();
+}
+function confirmThen(key, fn){
+  if (armed === key) { armed = null; fn(); save(); render(); }
+  else { armed = key; render(); }
+}
+
 document.addEventListener('click', e => {
   const t = e.target.closest('button');
   if (!t) return;
+  if (t.id === 'themeBtn') return toggleTheme();
   const act = t.dataset.act;
-  if (act === 'add') { addPerson(); return; }
-  if (act === 'exp') { doExport(t.dataset.kind); return; }
-  if (act === 'copy') { copyOut(); return; }
-  const p = state.people.find(x => x.id === t.dataset.id);
-  if (act === 'set' && p) {
-    const wk = t.dataset.wk, type = t.dataset.type, s = t.dataset.s;
-    const cur = p.records[wk] && p.records[wk][type];
-    setRec(p, wk, type, cur && cur.s === s ? null : s, view.day);
-    save(); render();
-  } else if (act === 'del' && p) {
-    if (armed === p.id) {
-      state.people = state.people.filter(x => x.id !== p.id);
-      armed = null; save();
-    } else armed = p.id;
-    render();
+  if (act === 'add-person') return addPerson();
+  if (act === 'add-cat') return addCat();
+  if (act === 'add-opt') return addOpt(t.dataset.c);
+  if (act === 'exp') return doExport(t.dataset.kind);
+  if (act === 'copy') return copyOut();
+  if (act === 'week') { view.day = addDays(view.day, +t.dataset.d); view.open = null; return render(); }
+  if (act === 'open') {
+    const same = view.open && view.open.p === t.dataset.p && view.open.c === t.dataset.c;
+    view.open = same ? null : { p: t.dataset.p, c: t.dataset.c };
+    return render();
   }
-});
-document.addEventListener('change', e => {
-  const el = e.target;
-  if (el.id === 'dayPick') { if (el.value) { view.day = el.value; render(); } return; }
-  if (el.hasAttribute('data-date') && el.value) {
-    const p = state.people.find(x => x.id === el.dataset.id);
-    const r = p && p.records[el.dataset.wk] && p.records[el.dataset.wk][el.dataset.type];
-    if (r && r.s === 'done') { r.d = el.value; save(); render(); }
+  if (act === 'note') {
+    view.noteOpen = view.noteOpen === t.dataset.p ? null : t.dataset.p;
+    return render();
+  }
+  if (act === 'set') {
+    const p = personById(t.dataset.p), c = catById(t.dataset.c);
+    if (!p || !c) return;
+    const o = optOf(c, t.dataset.o);
+    if (!o) return;
+    setEntry(p, t.dataset.w, c.id, o.id, o.kind === 'done' ? view.day : null);
+    view.open = null;
+    save(); render();
     return;
   }
+  if (act === 'clear') {
+    const p = personById(t.dataset.p), c = catById(t.dataset.c);
+    if (p && c) setEntry(p, t.dataset.w, c.id, null, null);
+    view.open = null;
+    save(); render();
+    return;
+  }
+  if (act === 'del-person') {
+    const p = personById(t.dataset.p);
+    if (p) confirmThen('p:' + p.id, () => { state.people = state.people.filter(x => x.id !== p.id); });
+    return;
+  }
+  if (act === 'del-cat') {
+    const c = catById(t.dataset.c);
+    if (c) confirmThen('c:' + c.id, () => {
+      state.cats = state.cats.filter(x => x.id !== c.id);
+      state.people.forEach(p => Object.keys(p.rec).forEach(wk => { if (p.rec[wk]) delete p.rec[wk][c.id]; }));
+    });
+    return;
+  }
+  if (act === 'del-opt') {
+    const c = catById(t.dataset.c);
+    if (c) confirmThen('o:' + t.dataset.o, () => { c.opts = c.opts.filter(o => o.id !== t.dataset.o); });
+    return;
+  }
+});
+
+document.addEventListener('change', e => {
+  const el = e.target;
+  const d = el.dataset || {};
+  if (el.id === 'dayPick') { if (el.value) { view.day = el.value; view.open = null; render(); } return; }
+  if (el.id === 'q') { view.q = el.value; render(); return; }
   if (el.id === 'importFile' && el.files && el.files[0]) {
     const f = el.files[0];
     const reader = new FileReader();
     reader.onload = () => doImport(String(reader.result || ''), f.name);
     reader.readAsText(f, 'UTF-8');
+    return;
+  }
+  if (el.hasAttribute('data-note')) {
+    const p = personById(d.p);
+    if (p) { const v = el.value.trim(); if (v) p.notes[d.w] = v; else delete p.notes[d.w]; save(); }
+    return;
+  }
+  if (el.hasAttribute('data-date') && el.value) {
+    const p = personById(d.p);
+    const en = p && p.rec[d.w] && p.rec[d.w][d.c];
+    if (en) { en.d = el.value; save(); render(); }
+    return;
+  }
+  if (el.hasAttribute('data-cat-name')) {
+    const c = catById(d.c);
+    if (c) { c.name = el.value.trim() || c.name; save(); render(); }
+    return;
+  }
+  if (el.hasAttribute('data-cat-days')) {
+    const c = catById(d.c);
+    const v = parseInt(el.value, 10);
+    if (c) { c.days = (el.value.trim() === '' || isNaN(v) || v < 1) ? null : v; save(); render(); }
+    return;
+  }
+  if (el.hasAttribute('data-opt-label')) {
+    const c = catById(d.c), o = c && optOf(c, d.o);
+    if (o) { o.label = el.value.trim() || o.label; save(); render(); }
+    return;
+  }
+  if (el.hasAttribute('data-opt-kind')) {
+    const c = catById(d.c), o = c && optOf(c, d.o);
+    if (o) { o.kind = el.value; save(); render(); }
+    return;
+  }
+  if (el.hasAttribute('data-person-name')) {
+    const p = personById(d.p);
+    if (p) { p.name = el.value.trim() || p.name; save(); render(); }
+    return;
   }
 });
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target && e.target.id === 'newName') addPerson();
-});
-window.addEventListener('hashchange', render);
 
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const id = e.target.id || '';
+  if (id === 'newName') addPerson();
+  else if (id === 'newCat') addCat();
+  else if (e.target.dataset && e.target.dataset.enterAdd === 'opt') addOpt(e.target.dataset.c);
+});
+
+initTheme();
+window.addEventListener('hashchange', render);
+if (!location.hash) { try { history.replaceState(null, '', '#record'); } catch (e) {} }
 render();
 </script>
 </body>
