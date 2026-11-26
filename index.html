@@ -670,8 +670,21 @@ document.addEventListener('click', e => {
   if (act === 'copy') return copyOut();
   if (act === 'week') { view.day = addDays(view.day, +t.dataset.d); view.open = null; return render(); }
   if (act === 'open') {
-    const same = view.open && view.open.p === t.dataset.p && view.open.c === t.dataset.c;
-    view.open = same ? null : { p: t.dataset.p, c: t.dataset.c };
+    // كل ضغطة على المربع بتنقل للاختيار اللي بعده: لا شيء ← الاختيار الأول ← ... ← الأخير ← لا شيء
+    const p = personById(t.dataset.p), c = catById(t.dataset.c);
+    if (!p || !c || !c.opts.length) return;
+    const wk = weekStart(view.day);
+    const e = (p.rec[wk] || {})[c.id];
+    const idx = e ? c.opts.findIndex(o => o.id === e.o) : -1;
+    const nextIdx = idx + 1;
+    if (nextIdx >= c.opts.length) {
+      setEntry(p, wk, c.id, null, null);
+    } else {
+      const o = c.opts[nextIdx];
+      setEntry(p, wk, c.id, o.id, o.kind === 'done' ? view.day : null);
+    }
+    view.open = null;
+    save();
     return render();
   }
   if (act === 'note') {
